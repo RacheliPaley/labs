@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract ThreePersonWallet {
+    address public person1;
+    address public person2;
+    address public person3;
+    uint public balance;
+    constructor(address _person1, address _person2, address _person3) {
+        person1 = _person1;
+        person2 = _person2;
+        person3 = _person3;
+    }
+    modifier onlyAuthorized() {
+        require(
+            msg.sender == person1 || msg.sender == person2 || msg.sender == person3,
+            "You are not authorized to withdraw."
+        );
+        _;
+    }
+    function deposit() public payable {
+        balance += msg.value;
+    }
+    function withdraw(uint _amount) public onlyAuthorized {
+        require(balance >= _amount, "Insufficient funds");
+        balance -= _amount;
+        payable(msg.sender).transfer(_amount);
+    }
+ 
+    function getBalance() public view returns (uint) {
+        return balance;
+    }
+}
