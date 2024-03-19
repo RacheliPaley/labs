@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract ThreePersonWallet {
+contract gabaim {
     address public owner;
     address private  person1;
     address private  person2;
@@ -11,6 +11,9 @@ contract ThreePersonWallet {
     event PersonAdded(address indexed person);
     event PersonRemoved(address indexed person);
     event PersonChanged(address indexed oldPerson, address indexed newPerson);
+    event Deposit(address indexed sender, uint256 amount);
+    // Event to log the withdrawal from the contract
+    event Withdraw(address indexed recipient, uint256 amount);
 
     constructor() {
         owner = msg.sender;
@@ -49,15 +52,16 @@ function setPerson3(address _newPerson) public onlyOwner {
     person3 = _newPerson;
     emit PersonChanged(person3, _newPerson);
 }
-    function deposit() public payable {
-        balance += msg.value;
+   receive() external payable {
+        emit Deposit(msg.sender, msg.value);
     }
 
-    function withdraw(uint _amount) public onlyAuthorized {
-        require(balance >= _amount, "Insufficient funds");
-        balance -= _amount;
-        payable(msg.sender).transfer(_amount);
-    }
+  function withdraw(uint _amount) public payable onlyAuthorized {
+    require(balance >= _amount, "Insufficient funds");
+    balance -= _amount;
+    payable(msg.sender).transfer(_amount);
+    emit Withdraw(msg.sender, _amount); // Update to use _amount instead of msg.value
+}
 
     function getBalance() public view returns (uint) {
         return balance;
