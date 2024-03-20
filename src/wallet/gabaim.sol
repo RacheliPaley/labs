@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 contract Gabaim {
     address public owner;
-    address public authorizedPerson1;
-    address public authorizedPerson2;
-    address public authorizedPerson3;
+    address public auth1;
+    address public auth2;
+    address public auth3;
     uint public balance;
 
     event PersonAdded(address indexed person);
@@ -24,24 +24,24 @@ contract Gabaim {
 
     modifier onlyAuthorized() {
         require(
-            msg.sender == authorizedPerson1 || msg.sender == authorizedPerson2 || msg.sender == authorizedPerson3,
-            "You are not authorized to withdraw."
+            msg.sender == auth1 || msg.sender == auth2 || msg.sender == auth3,
+            "no auth"
         );
         _;
     }
 
     function addAuthorizedPerson(address _newPerson) public onlyOwner {
         require(_newPerson != address(0) && _newPerson != owner, "Invalid address");
-        require(_newPerson != authorizedPerson1 && _newPerson != authorizedPerson2 && _newPerson != authorizedPerson3, "Address already authorized");
+        require(_newPerson != auth1 && _newPerson != auth2 && _newPerson != auth3, " already auth");
         
-        if (authorizedPerson1 == address(0)) {
-            authorizedPerson1 = _newPerson;
-        } else if (authorizedPerson2 == address(0)) {
-            authorizedPerson2 = _newPerson;
-        } else if (authorizedPerson3 == address(0)) {
-            authorizedPerson3 = _newPerson;
+        if (auth1 == address(0)) {
+            auth1 = _newPerson;
+        } else if (auth2 == address(0)) {
+            auth2 = _newPerson;
+        } else if (auth3 == address(0)) {
+            auth3 = _newPerson;
         } else {
-            revert("All authorized persons are already set");
+            revert("all already set");
         }
         
         emit PersonAdded(_newPerson);
