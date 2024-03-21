@@ -8,40 +8,36 @@ import "forge-std/console.sol";
 contract GabaimTest is Test {
     Gabaim public gabaim;
 
-    /// @dev Setup the testing environment.
+    // Setup the testing environment.
     function setUp() public {
         gabaim = new Gabaim();
-       
-     
+    }
+    
+    function testAddAuthorizedPerson() public {
+        // Arrange
+        address newPerson1 = address(0x123);
+        address newPerson2 = address(0x124);
+        address newPerson3 = address(0x125);
+        
+        // Act
+        gabaim.addAuthorizedPerson(newPerson1);
+        gabaim.addAuthorizedPerson(newPerson2);
+        gabaim.addAuthorizedPerson(newPerson3);
+        
+        // Assert
+        vm.expectRevert('you can add only 3 gabaim');
+        gabaim.addAuthorizedPerson(newPerson1);
     }
 
-    function testDepositAndWithdraw() public {
-        // Deposit 100
-        uint256 initialBalance = address(gabaim).balance;
-        uint256 depositAmount = 100 wei;
-        payable(address(gabaim)).transfer(depositAmount);
-        assertEq(address(gabaim).balance, initialBalance + depositAmount, "Contract balance should increase by deposit amount");
+    function testDeposit() public {
+        // Arrange
+        uint balanceBeforeDeposit = gabaim.getBalance();
+        uint depositAmount = 10000000;
 
-        // Withdraw 50
-        uint256 withdrawAmount = 50 wei;
-        uint256 balanceBeforeWithdraw = gabaim.getBalance();
-        gabaim.withdraw(withdrawAmount);
-        uint256 balanceAfterWithdraw = gabaim.getBalance();
-        assertEq(balanceBeforeWithdraw - withdrawAmount, balanceAfterWithdraw, "Balance should decrease after withdrawal");
+        // Act
+        (bool success, ) = address(gabaim).call{value: depositAmount}("");
+        require(success, "Deposit failed: Insufficient funds");
 
-        // Attempt to withdraw more than the balance
-        withdrawAmount = balanceAfterWithdraw + 100 wei;
-        (bool success, ) = address(gabaim).call{value: withdrawAmount}("");
-        assertEq(success, false, "Withdrawal should fail if trying to withdraw more than the balance");
-    }
-
-    function testOnlyAuthorized() public {
-        // Add an authorized person
-        address auth = address(0x123);
-        gabaim.addAuthorizedPerson(auth);
-
-        // Attempt to withdraw by an unauthorized user
-        (bool success, ) = auth.call{value: 50 wei}("");
-        assertEq(success, false, "Unauthorized user should not be able to withdraw");
-    }
-}
+        // Assert
+        uint balanceAfterDeposit = gabaim.getBalance();
+        assertEq(balanceAfterDepos

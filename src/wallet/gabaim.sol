@@ -25,14 +25,14 @@ contract Gabaim {
     modifier onlyAuthorized() {
         require(
             msg.sender == auth1 || msg.sender == auth2 || msg.sender == auth3,
-            "no auth"
+            "No authorization"
         );
         _;
     }
 
     function addAuthorizedPerson(address _newPerson) public onlyOwner {
         require(_newPerson != address(0) && _newPerson != owner, "Invalid address");
-        require(_newPerson != auth1 && _newPerson != auth2 && _newPerson != auth3, " already auth");
+        require(_newPerson != auth1 && _newPerson != auth2 && _newPerson != auth3, "Already authorized");
         
         if (auth1 == address(0)) {
             auth1 = _newPerson;
@@ -41,7 +41,7 @@ contract Gabaim {
         } else if (auth3 == address(0)) {
             auth3 = _newPerson;
         } else {
-            revert("all already set");
+            revert("All already set");
         }
         
         emit PersonAdded(_newPerson);
