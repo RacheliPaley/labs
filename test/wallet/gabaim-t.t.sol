@@ -5,54 +5,43 @@ import "foundry-huff/HuffDeployer.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-contract Payer {
-}
-
-contract Receiver {
-}
-
 contract GabaimTest is Test {
-    Gabaim public wallet;
-    Payer public payer;
-    Receiver public receiver;
+    Gabaim public gabaim;
 
     /// @dev Setup the testing environment.
     function setUp() public {
-        wallet = new Gabaim();
-        payer = new Payer();
-        receiver = new Receiver();
-
-        // Initialize the contracts with initial balance
-        // Send initial balance to the wallet contract
-        payable(address(wallet)).transfer(1000); // Sending 1000 wei to the wallet
-        // You can similarly initialize payer and receiver contracts if needed
+        gabaim = new Gabaim();
+       
+     
     }
 
-    function testDeposit() public {
-        uint256 initialBalance = address(wallet).balance;
-        uint256 depositAmount = 100;
+    function testDepositAndWithdraw() public {
+        // Deposit 100
+        uint256 initialBalance = address(gabaim).balance;
+        uint256 depositAmount = 100 wei;
+        payable(address(gabaim)).transfer(depositAmount);
+        assertEq(address(gabaim).balance, initialBalance + depositAmount, "Contract balance should increase by deposit amount");
 
-        // Send Ether to the contract
-        payable(address(wallet)).transfer(depositAmount);
+        // Withdraw 50
+        uint256 withdrawAmount = 50 wei;
+        uint256 balanceBeforeWithdraw = gabaim.getBalance();
+        gabaim.withdraw(withdrawAmount);
+        uint256 balanceAfterWithdraw = gabaim.getBalance();
+        assertEq(balanceBeforeWithdraw - withdrawAmount, balanceAfterWithdraw, "Balance should decrease after withdrawal");
 
-        // Check balance after deposit
-        uint256 expectedBalance = initialBalance + depositAmount;
-        uint256 currentBalance = address(wallet).balance;
-
-        assertEq(currentBalance, expectedBalance, "Deposit amount was not added correctly to the balance");
+        // Attempt to withdraw more than the balance
+        withdrawAmount = balanceAfterWithdraw + 100 wei;
+        (bool success, ) = address(gabaim).call{value: withdrawAmount}("");
+        assertEq(success, false, "Withdrawal should fail if trying to withdraw more than the balance");
     }
 
-    function testWithdraw() public {
-        uint256 initialBalance = address(wallet).balance;
-        uint256 withdrawAmount = 100;
+    function testOnlyAuthorized() public {
+        // Add an authorized person
+        address auth = address(0x123);
+        gabaim.addAuthorizedPerson(auth);
 
-        // Withdraw
-        wallet.withdraw(withdrawAmount);
-
-        // Check balance after withdrawal
-        uint256 expectedBalance = initialBalance - withdrawAmount;
-        uint256 currentBalance = address(wallet).balance;
-
-        assertEq(currentBalance, expectedBalance, "Withdrawal amount was not subtracted correctly from the balance");
+        // Attempt to withdraw by an unauthorized user
+        (bool success, ) = auth.call{value: 50 wei}("");
+        assertEq(success, false, "Unauthorized user should not be able to withdraw");
     }
 }
