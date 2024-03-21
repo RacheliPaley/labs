@@ -32,7 +32,7 @@ contract GabaimTest is Test {
     function testDeposit() public {
         // Arrange
         uint balanceBeforeDeposit = gabaim.getBalance();
-        uint depositAmount = 10000000;
+        uint depositAmount = 10000000 ;
 
         // Act
         (bool success, ) = address(gabaim).call{value: depositAmount}("");
@@ -40,4 +40,45 @@ contract GabaimTest is Test {
 
         // Assert
         uint balanceAfterDeposit = gabaim.getBalance();
-        assertEq(balanceAfterDepos
+        assertEq(balanceAfterDeposit, balanceBeforeDeposit + depositAmount, "Deposit amount not added to balance");
+    }
+
+    function testWithdraw() public {
+        uint sum = 100;
+        uint balance = 150;
+        payable(address(gabaim)).transfer(balance);
+        gabaim.addAuthorizedPerson(vm.addr(1));
+        vm.prank(vm.addr(1));
+        gabaim.withdraw(sum);
+        assertEq(gabaim.getBalance(), balance - sum);
+        vm.stopPrank();
+    }
+
+    function testWithdrawNotMoney() public {
+        // Arrange
+        uint sum = 100;
+        uint balance = 50;
+        payable(address(gabaim)).transfer(balance);
+        gabaim.addAuthorizedPerson(vm.addr(1));
+        vm.prank(vm.addr(1));
+
+        // Act
+        bool successBeforeWithdraw;
+        uint balanceBeforeWithdraw = gabaim.getBalance();
+        (successBeforeWithdraw, ) = address(gabaim).call{value: balance}("");
+        bool successWithdraw;
+        (successWithdraw, ) = address(gabaim).call{value: sum}("");
+        uint balanceAfterWithdraw = gabaim.getBalance();
+
+        // Assert
+        require(successBeforeWithdraw, "Deposit failed: Insufficient funds");
+        require(!successWithdraw, "Withdrawal should fail if trying to withdraw more than the balance");
+        assertEq(balanceAfterWithdraw, balance, "Balance should remain unchanged after failed withdrawal attempt");
+    }
+      function testNotOwner() public {
+        payable(address(gabaim)).transfer(100);
+        vm.expectRevert('Wallet not mainOwner');
+        vm.prank(vm.addr(1));
+        gabaim.withdraw(100);
+    }
+}
