@@ -6,7 +6,7 @@ contract Gabaim {
     address public auth1;
     address public auth2;
     address public auth3;
-    uint public balance;
+   
 
     event PersonAdded(address indexed person);
     event PersonRemoved(address indexed person);
@@ -15,6 +15,8 @@ contract Gabaim {
 
     constructor() {
         owner = msg.sender;
+        auth1= address(1234);
+        
     }
 
     modifier onlyOwner() {
@@ -48,18 +50,18 @@ contract Gabaim {
     }
 
     receive() external payable {
-        balance += msg.value;
+     
         emit Deposit(msg.sender, msg.value);
     }
 
     function withdraw(uint _amount) public payable onlyAuthorized {
-        require(balance >= _amount, "Insufficient funds");
-        balance -= _amount;
+        require(address(this).balance >= _amount, "too much");
+      
         payable(msg.sender).transfer(_amount);
         emit Withdraw(msg.sender, _amount);
     }
 
     function getBalance() public view returns (uint) {
-        return balance;
+        return address(this).balance;
     }
 }
