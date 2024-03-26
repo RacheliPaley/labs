@@ -30,18 +30,18 @@ contract GabaimTest is Test {
     }
 
     function testDeposit() public {
-        // Arrange
-        uint balanceBeforeDeposit = gabaim.getBalance();
-        uint depositAmount = 10000000 ;
+      
+      address addr =vm.addr(1234);
+      uint ammount =100;
+    
+      uint balanceBeforeDeposit = gabaim.getBalance();
+      vm.deal(addr, ammount);
+      payable(address(gabaim)).transfer(ammount);
+    uint  balanceAfterDeposit = gabaim.getBalance();
+      assertEq(balanceAfterDeposit, balanceBeforeDeposit + ammount, "Deposit not added to wallet");
 
-        // Act
-        (bool success, ) = address(gabaim).call{value: depositAmount}("");
-        require(success, "Deposit failed: Insufficient funds");
-
-        // Assert
-        uint balanceAfterDeposit = gabaim.getBalance();
-        assertEq(balanceAfterDeposit, balanceBeforeDeposit + depositAmount, "Deposit amount not added to balance");
     }
+    
 
     function testWithdraw() public {
         uint sum = 100;
@@ -77,7 +77,7 @@ contract GabaimTest is Test {
     }
       function testNotOwner() public {
         payable(address(gabaim)).transfer(100);
-        vm.expectRevert('Wallet not mainOwner');
+        vm.expectRevert('you are not Owner');
         vm.prank(vm.addr(1));
         gabaim.withdraw(100);
     }
