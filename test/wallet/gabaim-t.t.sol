@@ -11,84 +11,95 @@ contract GabaimTest is Test {
     // Setup the testing environment.
     function setUp() public {
         gabaim = new Gabaim();
-        payable(address(gabaim)).transfer(1000);
-     
+        payable(address(gabaim)).transfer(10000);
     }
     
-    // function testAddAuthorizedPerson() public {
-    //     // Arrange
-      
-    //     address newPerson2 = address(0x124);
-    //     address newPerson3 = address(0x125);
-        
-    //     // Act
-     
-    //     gabaim.addAuthorizedPerson(newPerson2);
-     
-        
-    //     // Assert
-    //     vm.expectRevert('you can add only 3 gabaim');
-    //     gabaim.addAuthorizedPerson(newPerson2);
-    // }
-
-    function testDeposit() public {
-      
-      address addr =vm.addr(12345);
-      uint ammount =200;
-    
-      uint balanceBeforeDeposit = address(gabaim).balance;
-     vm.prank(addr);
-      vm.deal(address(addr), ammount);
-      
-      payable(address(gabaim)).transfer(ammount);
-    uint  balanceAfterDeposit = address(gabaim).balance;
-    console.log(balanceBeforeDeposit + ammount);
-    console.log(balanceAfterDeposit);
-      assertEq(balanceAfterDeposit, balanceBeforeDeposit + ammount, "Deposit not added to wallet");
-      vm.stopPrank();
-
+    function testAddAuthorizedPerson(address newGabai) external {
+       
+        if (gabaim.auth1() == newGabai || gabaim.auth2() == newGabai || gabaim.auth3() == newGabai) {
+            vm.expectRevert("The gabai already exists");
+        } else if (gabaim.auth1() == address(0)) {
+            gabaim.addAuthorizedPerson(newGabai);
+        } else if (gabaim.auth2() == address(0)) {
+            gabaim.addAuthorizedPerson(newGabai);
+        } else if (gabaim.auth3() == address(0)) {
+            gabaim.addAuthorizedPerson(newGabai);
+        } else {
+            vm.expectRevert("There are already 3 gabaiim");
+        }
     }
-    
 
-    function testWithdraw() external {
-        uint sum = 100;
-      
-        address adr1= address(1234);
-        
-        // payable(address(gabaim)).transfer(balance);
-    
-        vm.prank(adr1);
-        uint before = address(gabaim).balance;
-        gabaim.withdraw(sum);
-        console.log(before);
-      
-       uint afterwithdraw = address(gabaim).balance;
-       console.log(afterwithdraw);
-       assertEq(afterwithdraw, before - sum);
+    function testChangeAuthSuccess() external {
+        address newPerson = address(0x123);
+        gabaim.changeAuthorizedPerson(address(1234), newPerson);
+        console.log(gabaim.auth1());
+        assertEq(gabaim.auth1(), newPerson, "Auth1 was not changed successfully");
+    }
+
+    function testChangeAuthFail() external {
+        address wrong = address(11111);
+        address newPerson = address(0x123);
+        vm.expectRevert();
+        gabaim.changeAuthorizedPerson(wrong, newPerson);
+        assertEq(gabaim.auth1(), newPerson, "Auth1 was not changed successfully");
+    }
+
+    function testDeposit(uint32 amount) public {
+         vm.assume(amount > 0); 
+        address addr = vm.addr(12345);
+       
+        console.log(amount);
+        uint balanceBeforeDeposit = address(gabaim).balance;
+        vm.prank(addr);
+        vm.deal(address(addr), amount);
+        payable(address(gabaim)).transfer(amount);
+        uint balanceAfterDeposit = address(gabaim).balance;
+        console.log(balanceBeforeDeposit + amount);
+        console.log(balanceAfterDeposit);
+        assertEq(balanceAfterDeposit, balanceBeforeDeposit + amount, "Deposit not added to wallet");
         vm.stopPrank();
     }
 
-    function testWithdrawNotMoney() external {
-       uint sum = 2000;
-      
-        address adr1= address(1234);
-        
-        // payable(address(gabaim)).transfer(balance);
-    
+    function testWithdraw(uint32 amount) external {
+        console.log(amount);
+        vm.assume(amount < 10000); 
+
+        console.log(amount);
+        address adr1 = address(1234);
         vm.prank(adr1);
         uint before = address(gabaim).balance;
-        
-        if (before >= sum) {
-        gabaim.withdraw(sum);
+        gabaim.withdraw(amount);
+        console.log(before);
         uint afterwithdraw = address(gabaim).balance;
-        assertEq(afterwithdraw, before - sum);
+        console.log(afterwithdraw);
+        assertEq(afterwithdraw, before - amount, "opps");
+        vm.stopPrank();
+    }
+
+    function testWithdrawNotMoney(uint32 amount) external {
+      
+        address adr1 = address(1234);
+        vm.prank(adr1);
+        uint before = address(gabaim).balance;
+        if (before >= amount) {
+            gabaim.withdraw(amount);
+            uint afterwithdraw = address(gabaim).balance;
+            assertEq(afterwithdraw, before - amount);
         }
         vm.stopPrank();
-       
     }
-      function testNotOwnerWithdraw() public {
-        payable(address(gabaim)).transfer(100);
-       
-        gabaim.withdraw(100);
+
+    function testNotOwnerWithdraw() public {
+        uint sum = 100;
+        address adr1 = address(1234666);
+        vm.expectRevert();
+        vm.prank(adr1);
+        uint before = address(gabaim).balance;
+        console.log(before);
+        gabaim.withdraw(sum);
+        uint afterwithdraw = address(gabaim).balance;
+        console.log(afterwithdraw);
+        assertEq(afterwithdraw, before - sum);
+        vm.stopPrank();
     }
 }

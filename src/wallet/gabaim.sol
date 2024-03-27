@@ -12,6 +12,7 @@ contract Gabaim {
     event PersonRemoved(address indexed person);
     event Deposit(address indexed sender, uint256 amount);
     event Withdraw(address indexed recipient, uint256 amount);
+    event AuthChanged(address indexed oldAuth, address indexed newAuth);
 
     constructor() {
         owner = msg.sender;
@@ -49,13 +50,45 @@ contract Gabaim {
         emit PersonAdded(_newPerson);
     }
 
+    function removeAuthorizedPerson(address _personToRemove) public onlyOwner {
+        require(_personToRemove != address(0) && _personToRemove != owner, "Invalid address");
+
+        if (auth1 == _personToRemove) {
+            auth1 = address(0);
+        } else if (auth2 == _personToRemove) {
+            auth2 = address(0);
+        } else if (auth3 == _personToRemove) {
+            auth3 = address(0);
+        } else {
+            revert("Address not found");
+        }
+
+        emit PersonRemoved(_personToRemove);
+    }
+
+    function changeAuthorizedPerson(address _oldPerson, address _newPerson) public onlyOwner {
+        require(_oldPerson != address(0) && _oldPerson != owner, "Invalid old address");
+        require(_newPerson != address(0) && _newPerson != owner, "Invalid new address");
+
+        if (auth1 == _oldPerson) {
+            auth1 = _newPerson;
+        } else if (auth2 == _oldPerson) {
+            auth2 = _newPerson;
+        } else if (auth3 == _oldPerson) {
+            auth3 = _newPerson;
+        } else {
+            revert("Address not found");
+        }
+
+        emit AuthChanged(_oldPerson, _newPerson);
+    }
+
     receive() external payable {
-     
         emit Deposit(msg.sender, msg.value);
     }
 
     function withdraw(uint _amount) public payable onlyAuthorized {
-        require(address(this).balance >= _amount, "too much");
+        require(address(this).balance >= _amount, "Insufficient balance");
       
         payable(msg.sender).transfer(_amount);
         emit Withdraw(msg.sender, _amount);
