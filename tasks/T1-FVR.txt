@@ -1,0 +1,34 @@
+pictire1:
+
+All cars can be sold,
+everything that is sold has a price,
+ every car has a price.
+
+-------------
+All cats are mammals.
+No mammals are birds.
+No cats are birds
+
+-------------
+Some cars are bus.
+All bus are vehicles.
+Some cars are vehicles
+
+--------------
+Some roses are red.
+No red flowers are blue.
+Some roses are not blue
+
+------------------------------------------------------------
+
+picture2:
+
+All apples are fruit.
+No fruit is meat.
+No apples are meat
+--------------
+No bananas are apples.
+All oranges are apples.
+No bananas are oranges
+
+
