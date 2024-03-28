@@ -87,7 +87,8 @@ contract Gabaim {
         emit Deposit(msg.sender, msg.value);
     }
 
-    function withdraw(uint _amount) public payable onlyAuthorized {
+    function withdraw(uint _amount) external
+     payable onlyAuthorized {
         require(address(this).balance >= _amount, "Insufficient balance");
       
         payable(msg.sender).transfer(_amount);

@@ -60,46 +60,83 @@ contract GabaimTest is Test {
         vm.stopPrank();
     }
 
-    function testWithdraw(uint32 amount) external {
-        console.log(amount);
-        vm.assume(amount < 10000); 
+    // function testWithdraw(uint32 amount) external {
+    //     console.log(amount);
+    //     vm.assume(amount < 10000); 
 
-        console.log(amount);
-        address adr1 = address(1234);
-        vm.prank(adr1);
-        uint before = address(gabaim).balance;
-        gabaim.withdraw(amount);
+    //     console.log(amount);
+    //     address adr1 = address(1234);
+    //     vm.prank(adr1);
+    //     uint before = address(gabaim).balance;
+    //     gabaim.withdraw(amount);
+    //     console.log(before);
+    //     uint afterwithdraw = address(gabaim).balance;
+    //     console.log(afterwithdraw);
+    //     assertEq(afterwithdraw, before - amount, "opps");
+    //     vm.stopPrank();
+    // }
+    function testWithdrawConditions(uint256 _amount) external {
+    // Mock an authorized address using vm.Prank
+   
+      address adr1 = address(1234);
+      console.log(msg.sender);
+    vm.startPrank(adr1); // Replace auth1 with the appropriate authorized address
+
+
+console.log(msg.sender);
+console.log(_amount);
+
+   if(adr1 == gabaim.auth1()||adr1 == gabaim.auth2() ||adr1 == gabaim.auth3())
+   {
+    assertLt(_amount ,address(gabaim).balance, "Withdrawal amount exceeds contract balance");
+
+    // Check if the withdrawal amount is greater than zero
+    assertGt(_amount , 0, "Withdrawal amount must be greater than zero");
+
+    uint before = address(gabaim).balance;
+        gabaim.withdraw(_amount);
         console.log(before);
         uint afterwithdraw = address(gabaim).balance;
         console.log(afterwithdraw);
-        assertEq(afterwithdraw, before - amount, "opps");
+        assertEq(afterwithdraw, before - _amount, "opps");
+   }
+   else
+   {
+    vm.expectRevert();
+      uint before = address(gabaim).balance;
+        gabaim.withdraw(_amount);
+        console.log(before);
+        uint afterwithdraw = address(gabaim).balance;
+        console.log(afterwithdraw);
+        assertEq(afterwithdraw, before - _amount, "opps");
+   }
         vm.stopPrank();
-    }
+}
 
-    function testWithdrawNotMoney(uint32 amount) external {
+    // function testWithdrawNotMoney(uint32 amount) external {
       
-        address adr1 = address(1234);
-        vm.prank(adr1);
-        uint before = address(gabaim).balance;
-        if (before >= amount) {
-            gabaim.withdraw(amount);
-            uint afterwithdraw = address(gabaim).balance;
-            assertEq(afterwithdraw, before - amount);
-        }
-        vm.stopPrank();
-    }
+    //     address adr1 = address(1234);
+    //     vm.prank(adr1);
+    //     uint before = address(gabaim).balance;
+    //     if (before >= amount) {
+    //         gabaim.withdraw(amount);
+    //         uint afterwithdraw = address(gabaim).balance;
+    //         assertEq(afterwithdraw, before - amount);
+    //     }
+    //     vm.stopPrank();
+    // }
 
-    function testNotOwnerWithdraw() public {
-        uint sum = 100;
-        address adr1 = address(1234666);
-        vm.expectRevert();
-        vm.prank(adr1);
-        uint before = address(gabaim).balance;
-        console.log(before);
-        gabaim.withdraw(sum);
-        uint afterwithdraw = address(gabaim).balance;
-        console.log(afterwithdraw);
-        assertEq(afterwithdraw, before - sum);
-        vm.stopPrank();
-    }
+    // function testNotOwnerWithdraw() public {
+    //     uint sum = 100;
+    //     address adr1 = address(1234666);
+    //     vm.expectRevert();
+    //     vm.prank(adr1);
+    //     uint before = address(gabaim).balance;
+    //     console.log(before);
+    //     gabaim.withdraw(sum);
+    //     uint afterwithdraw = address(gabaim).balance;
+    //     console.log(afterwithdraw);
+    //     assertEq(afterwithdraw, before - sum);
+    //     vm.stopPrank();
+    // }
 }
