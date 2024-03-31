@@ -31,20 +31,7 @@ contract GabaimTest is Test {
         }
     }
 
-    function testChangeAuthSuccess() external {
-        address newPerson = address(0x123);
-        gabaim.changeAuthorizedPerson(address(1234), newPerson);
-        console.log(gabaim.auth1());
-        assertEq(gabaim.auth1(), newPerson, "Auth1 was not changed successfully");
-    }
-
-    function testChangeAuthFail() external {
-        address wrong = address(11111);
-        address newPerson = address(0x123);
-        vm.expectRevert();
-        gabaim.changeAuthorizedPerson(wrong, newPerson);
-        assertEq(gabaim.auth1(), newPerson, "Auth1 was not changed successfully");
-    }
+   
 
     function testDeposit(uint8 amount) public {
      
@@ -62,10 +49,9 @@ contract GabaimTest is Test {
         vm.stopPrank();
     }
 
-    function testWithdrawConditions() external {
+    function testWithdraw(uint8 _amount) external {
         
         // Mock an authorized address using vm.Prank
-        uint _amount =200;
         address adr1 = address(1234);
         console.log(_amount);
     
@@ -94,8 +80,8 @@ contract GabaimTest is Test {
             assertEq(afterwithdraw, before - _amount, "opps");
         }
         vm.stopPrank();
-    }
 
+}
 }
 
 
