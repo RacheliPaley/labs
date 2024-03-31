@@ -87,13 +87,30 @@ contract Gabaim {
         emit Deposit(msg.sender, msg.value);
     }
 
-    function withdraw(uint _amount) external
-     payable onlyAuthorized {
-        require(address(this).balance >= _amount, "Insufficient balance");
-      
-        payable(msg.sender).transfer(_amount);
-        emit Withdraw(msg.sender, _amount);
+   mapping(address => uint) public withdrawalAmounts;
+
+function withdraw(uint _amount) external payable onlyAuthorized {
+    require(address(this).balance >= _amount, "Insufficient balance");
+    require(_amount <= 300, "Exceeds maximum withdrawal amount");
+
+    uint allowedWithdrawal = 0;
+    uint totalWithdrawal = withdrawalAmounts[msg.sender] + _amount;
+
+    if (msg.sender == auth1) {
+        allowedWithdrawal = 300 ;
+    } else if (msg.sender == auth2) {
+        allowedWithdrawal = 300 ;
+    } else if (msg.sender == auth3) {
+        allowedWithdrawal = 300 ;
     }
+    
+    require(totalWithdrawal <= allowedWithdrawal, "Exceeds maximum authorized withdrawal amount");
+
+    withdrawalAmounts[msg.sender] = totalWithdrawal;
+
+    payable(msg.sender).transfer(_amount);
+    emit Withdraw(msg.sender, _amount);
+}
 
     function getBalance() public view returns (uint) {
         return address(this).balance;

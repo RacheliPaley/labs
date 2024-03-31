@@ -65,7 +65,7 @@ contract GabaimTest is Test {
     function testWithdrawConditions() external {
         
         // Mock an authorized address using vm.Prank
-        uint _amount =200;
+        uint _amount =400 ;
         address adr1 = address(1234);
         console.log(_amount);
     
