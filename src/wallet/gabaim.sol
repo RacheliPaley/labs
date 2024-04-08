@@ -6,7 +6,6 @@ contract Gabaim {
     address public auth1;
     address public auth2;
     address public auth3;
-   
 
     event PersonAdded(address indexed person);
     event PersonRemoved(address indexed person);
@@ -16,8 +15,7 @@ contract Gabaim {
 
     constructor() {
         owner = msg.sender;
-        auth1= address(1234);
-        
+        auth1 = address(1234);
     }
 
     modifier onlyOwner() {
@@ -26,17 +24,14 @@ contract Gabaim {
     }
 
     modifier onlyAuthorized() {
-        require(
-            msg.sender == auth1 || msg.sender == auth2 || msg.sender == auth3,
-            "No authorization"
-        );
+        require(msg.sender == auth1 || msg.sender == auth2 || msg.sender == auth3, "No authorization");
         _;
     }
 
     function addAuthorizedPerson(address _newPerson) public onlyOwner {
         require(_newPerson != address(0) && _newPerson != owner, "Invalid address");
         require(_newPerson != auth1 && _newPerson != auth2 && _newPerson != auth3, "Already authorized");
-        
+
         if (auth1 == address(0)) {
             auth1 = _newPerson;
         } else if (auth2 == address(0)) {
@@ -46,7 +41,7 @@ contract Gabaim {
         } else {
             revert("All already set");
         }
-        
+
         emit PersonAdded(_newPerson);
     }
 
@@ -87,32 +82,32 @@ contract Gabaim {
         emit Deposit(msg.sender, msg.value);
     }
 
-   mapping(address => uint) public withdrawalAmounts;
+    mapping(address => uint256) public withdrawalAmounts;
 
-function withdraw(uint _amount) external payable onlyAuthorized {
-    require(address(this).balance >= _amount, "Insufficient balance");
-    require(_amount <= 300, "Exceeds maximum withdrawal amount");
+    function withdraw(uint256 _amount) external payable onlyAuthorized {
+        require(address(this).balance >= _amount, "Insufficient balance");
+        require(_amount <= 300, "Exceeds maximum withdrawal amount");
 
-    uint allowedWithdrawal = 0;
-    uint totalWithdrawal = withdrawalAmounts[msg.sender] + _amount;
+        uint256 allowedWithdrawal = 0;
+        uint256 totalWithdrawal = withdrawalAmounts[msg.sender] + _amount;
 
-    if (msg.sender == auth1) {
-        allowedWithdrawal = 300 ;
-    } else if (msg.sender == auth2) {
-        allowedWithdrawal = 300 ;
-    } else if (msg.sender == auth3) {
-        allowedWithdrawal = 300 ;
+        if (msg.sender == auth1) {
+            allowedWithdrawal = 300;
+        } else if (msg.sender == auth2) {
+            allowedWithdrawal = 300;
+        } else if (msg.sender == auth3) {
+            allowedWithdrawal = 300;
+        }
+
+        require(totalWithdrawal <= allowedWithdrawal, "Exceeds maximum authorized withdrawal amount");
+
+        withdrawalAmounts[msg.sender] = totalWithdrawal;
+
+        payable(msg.sender).transfer(_amount);
+        emit Withdraw(msg.sender, _amount);
     }
-    
-    require(totalWithdrawal <= allowedWithdrawal, "Exceeds maximum authorized withdrawal amount");
 
-    withdrawalAmounts[msg.sender] = totalWithdrawal;
-
-    payable(msg.sender).transfer(_amount);
-    emit Withdraw(msg.sender, _amount);
-}
-
-    function getBalance() public view returns (uint) {
+    function getBalance() public view returns (uint256) {
         return address(this).balance;
     }
 }

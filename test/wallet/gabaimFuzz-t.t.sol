@@ -1,4 +1,3 @@
-
 pragma solidity ^0.8.20;
 
 import "@hack/wallet/gabaim.sol";
@@ -14,10 +13,10 @@ contract GabaimTest is Test {
         gabaim = new Gabaim();
         payable(address(gabaim)).transfer(1000);
     }
-    
+
     function testAddAuthorizedPerson(address newGabai) external {
         console.log(newGabai);
-       
+
         if (gabaim.auth1() == newGabai || gabaim.auth2() == newGabai || gabaim.auth3() == newGabai) {
             vm.expectRevert("The gabai already exists");
         } else if (gabaim.auth1() == address(0)) {
@@ -31,18 +30,15 @@ contract GabaimTest is Test {
         }
     }
 
-   
-
     function testDeposit(uint8 amount) public {
-     
         address addr = vm.addr(12345);
-       
+
         console.log(amount);
-        uint balanceBeforeDeposit = address(gabaim).balance;
+        uint256 balanceBeforeDeposit = address(gabaim).balance;
         vm.prank(addr);
         vm.deal(address(addr), amount);
         payable(address(gabaim)).transfer(amount);
-        uint balanceAfterDeposit = address(gabaim).balance;
+        uint256 balanceAfterDeposit = address(gabaim).balance;
         console.log(balanceBeforeDeposit + amount);
         console.log(balanceAfterDeposit);
         assertEq(balanceAfterDeposit, balanceBeforeDeposit + amount, "Deposit not added to wallet");
@@ -50,39 +46,30 @@ contract GabaimTest is Test {
     }
 
     function testWithdraw(uint8 _amount) external {
-        
         // Mock an authorized address using vm.Prank
         address adr1 = address(1234);
         console.log(_amount);
-    
-        vm.startPrank(adr1); 
 
-        if(adr1 == gabaim.auth1()||adr1 == gabaim.auth2() ||adr1 == gabaim.auth3())
-        {
-            assertLt(_amount ,address(gabaim).balance, "Withdrawal amount exceeds contract balance");
+        vm.startPrank(adr1);
 
-        
-            uint before = address(gabaim).balance;
+        if (adr1 == gabaim.auth1() || adr1 == gabaim.auth2() || adr1 == gabaim.auth3()) {
+            assertLt(_amount, address(gabaim).balance, "Withdrawal amount exceeds contract balance");
+
+            uint256 before = address(gabaim).balance;
             gabaim.withdraw(_amount);
             console.log(before);
-            uint afterwithdraw = address(gabaim).balance;
+            uint256 afterwithdraw = address(gabaim).balance;
             console.log(afterwithdraw);
             assertEq(afterwithdraw, before - _amount, "opps");
-        }
-        else
-        {
+        } else {
             vm.expectRevert();
-            uint before = address(gabaim).balance;
+            uint256 before = address(gabaim).balance;
             gabaim.withdraw(_amount);
             console.log(before);
-            uint afterwithdraw = address(gabaim).balance;
+            uint256 afterwithdraw = address(gabaim).balance;
             console.log(afterwithdraw);
             assertEq(afterwithdraw, before - _amount, "opps");
         }
         vm.stopPrank();
-
+    }
 }
-}
-
-
-
