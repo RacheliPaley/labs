@@ -1,0 +1,37 @@
+By: Ruth Klirs, Rachel Paley,  Yael Taitelbom
+REWARDS-4-7 is a smart contract that manages a pool of 1,000,000 cloud tokens. Participants can embed their cloud tokens in the contract, which will be stored in a variable called total deposits
+. To be eligible for rewards, participants must hold their tokens in stake for at least 7 days.
+
+The rewards are distributed proportionally based on the amount of the bet that the user wishes to withdraw in relation to the total deposits of the participants that are currently in place.
+The reward is 2% of the pool of reward tokens multiplied by the ratio of the amount withdrawn to the amount of tokens in total deposits.
+
+
+Below is a breakdown of how REWARDS-4-7 works
+
+example
+Scenario 1: Deposits made on the same day by different people:
+Cloud storage with 1,000,000 cloud tokens.
+Investors:
+Staker 1: deposits 10,000 tokens on day 1 (total deposits: 10,000)
+Staker 2: convert 5000 tokens on day 1 (total deposits: 15,000)
+
+Withdrawal of deposits on the 8th:
+
+Staker 1: withdraws 2,000 tokens and receives a reward of: ((2000÷15000)×2÷100×1000000=2666)
+status:
+    • total deposits: 13,000
+    • Reward pool: 1000000- 2666=997333
+
+Staker 2: withdraws 2000 tokens and receives a reward of:
+997334×(2÷100)×(2000÷13000)=3068
+status:
+    • total deposits: 11,000
+    • Reward pool: 997333-3068=994265
+
+
+
+main points:
+Participants are rewarded proportionally to their contribution to the total bet
+Betting earlier increases the chance of getting a bigger reward because the total bet amount may be lower.
+Betting after a 7 day window disqualifies users from receiving rewards for that particular round.
+This structure incentivizes participants to stake their tokens early and hold them for a specified period to maximize their potential rewards from a collective staking contract.
