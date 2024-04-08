@@ -4,7 +4,7 @@ REWARDS-4-7 is a smart contract that manages a pool of 1,000,000 cloud tokens. P
 
 The rewards are distributed proportionally based on the amount of the bet that the user wishes to withdraw in relation to the total deposits of the participants that are currently in place.
 The reward is 2% of the pool of reward tokens multiplied by the ratio of the amount withdrawn to the amount of tokens in total deposits.
-
+if the total-deposits is bigger than Reward-pool So we will add new tokens for Reward-pool.
 
 Below is a breakdown of how REWARDS-4-7 works
 
