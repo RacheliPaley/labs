@@ -15,7 +15,8 @@ contract TestStakingRewards is Test {
         rewardsContract = new StakingRewards(address(stakingToken), address(rewardsToken));
     }
     function testStake() public {
-        stakingToken.mint(1000);
+        console.log(rewardsContract.staked());
+        stakingToken.mint(600);
         stakingToken.approve(address(rewardsContract), 1000);
         rewardsContract.stake(500);
         assertEq(
@@ -29,7 +30,7 @@ contract TestStakingRewards is Test {
             "Total staked amount should increase"
         );
     }
-    function testWithdraw() public {
+    function testWithdrawStaking() public {
         stakingToken.mint(1000);
         stakingToken.approve(address(rewardsContract), 1000);
         rewardsContract.stake(500);
@@ -45,17 +46,7 @@ contract TestStakingRewards is Test {
             "Total staked amount should decrease"
         );
     }
-    // function testGetReward() public {
-    //     rewardsToken.mint(1000);
-    //     rewardsToken.transfer(address(rewardsContract), 1000);
-    //     rewardsContract.getReward();
-    //     assertEq(
-    //         rewardsToken.balanceOf(address(this)),
-    //         1000,
-    //         "User should receive rewards"
-    //     );
-    // }
-    function testSetRewardsDuration() public {
+       function testSetRewardsDuration() public {
         rewardsContract.setRewardsDuration(14 days);
         assertEq(
             rewardsContract.duration(),

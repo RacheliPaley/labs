@@ -55,6 +55,7 @@ contract StakingRewards {
         stakingToken.transferFrom(msg.sender, address(this), amount);
         balances[msg.sender] += amount;
         staked += amount;
+        console.log("s",staked);
     }
     function withdraw(uint256 amount) external updateReward(msg.sender) {
         require(amount > 0, "amount = 0");
