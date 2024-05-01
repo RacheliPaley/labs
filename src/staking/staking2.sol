@@ -59,8 +59,11 @@ contract StakingRewards {
     }
     function withdraw(uint256 amount) external updateReward(msg.sender) {
         require(amount > 0, "amount = 0");
+        require(amount<balances[msg.sender] ,"too much withdraw");
         balances[msg.sender] -= amount;
+          console.log("before",staked);
         staked -= amount;
+        console.log("after",staked);
         stakingToken.transfer(msg.sender, amount);
     }
     function getReward() external updateReward(msg.sender) {
@@ -72,8 +75,10 @@ contract StakingRewards {
     }
     // --- ADMINISTRATION
     function setRewardsDuration(uint256 _duration) external onlyOwner {
+       
         require(finish < block.timestamp, "reward duration not finished");
         duration = _duration;
+        console.log("dur  " ,duration);
     }
     function updateRate(uint256 amount) external
     onlyOwner updateReward(address(0)) {

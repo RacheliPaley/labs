@@ -33,16 +33,18 @@ contract TestStakingRewards is Test {
     function testWithdrawStaking() public {
         stakingToken.mint(1000);
         stakingToken.approve(address(rewardsContract), 1000);
-        rewardsContract.stake(500);
-        rewardsContract.withdraw(200);
+        uint amount = 500;
+        rewardsContract.stake(amount);
+        uint pullAmount = 400;
+        rewardsContract.withdraw(pullAmount);
         assertEq(
             rewardsContract.balances(address(this)),
-            300,
+            amount-pullAmount,
             "Withdrawal should decrease user balance"
         );
         assertEq(
             rewardsContract.staked(),
-            300,
+             amount-pullAmount,
             "Total staked amount should decrease"
         );
     }
