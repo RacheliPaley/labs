@@ -28,21 +28,27 @@ contract StakingRewards {
     }
     // --- VIEWS
     function lastTime() public view returns (uint256) {
+        console.log("block.timestamp:  ",block.timestamp ,"finish:  ", finish);
         return block.timestamp < finish ? block.timestamp : finish;
     }
     function accumulated() public view returns (uint256) {
+        console.log("stake: " , staked ,"reard:  ",reward);
         if (staked == 0) {
             return reward;
         }
+        console.log("rate: ",rate);
         return reward + (rate * (lastTime() - updated) * 1e18) / staked;
     }
     function earned(address guy) public view returns (uint256) {
+        console.log("ee",((balances[guy] * (accumulated() - paid[guy])) / 1e18)
+                 + rewards[guy]);
         return ((balances[guy] * (accumulated() - paid[guy])) / 1e18)
                  + rewards[guy];
     }
     // --- STATE CHANGES
     modifier updateReward(address guy) {
         reward  = accumulated();
+       
         updated = lastTime();
         if (guy != address(0)) {
             rewards[guy] = earned(guy);
@@ -68,9 +74,11 @@ contract StakingRewards {
     }
     function getReward() external updateReward(msg.sender) {
         uint256 r = rewards[msg.sender];
+          console.log("r" , r);
         if (r > 0) {
             rewards[msg.sender] = 0;
             rewardsToken.transfer(msg.sender, r);
+          
         }
     }
     // --- ADMINISTRATION
@@ -98,7 +106,7 @@ contract StakingRewards {
         // Reward + leftover must be less than 2^256 / 10^18 to
         // avoid overflow.
         uint balance = rewardsToken.balanceOf(address(this));
-        console.log("balance" , balance);
+        console.log("balance" , balance , "rate  :" ,rate) ;
         require(rate <= balance / duration, "provided reward too high");
         finish  = block.timestamp + duration;
         updated = block.timestamp;

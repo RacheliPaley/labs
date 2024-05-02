@@ -19,6 +19,8 @@ contract TestStakingRewards is Test {
         stakingToken.mint(600);
         stakingToken.approve(address(rewardsContract), 1000);
         rewardsContract.stake(500);
+        console.log("bbb :",stakingToken.balanceOf(address(rewardsContract)));
+     
         assertEq(
             rewardsContract.balances(address(this)),
             500,
@@ -31,20 +33,27 @@ contract TestStakingRewards is Test {
         );
     }
     function testWithdrawStaking() public {
-        stakingToken.mint(1000);
-        stakingToken.approve(address(rewardsContract), 1000);
-        uint amount = 500;
+        stakingToken.mint(3000);
+        stakingToken.approve(address(rewardsContract), 3000);
+        uint amount = 900;
         rewardsContract.stake(amount);
         uint pullAmount = 400;
+        console.log("bbb :",stakingToken.balanceOf(address(rewardsContract)));
+       
+
+        vm.warp(block.timestamp + 14 days);
+         rewardsContract.stake(300);
+        rewardsContract.getReward();
         rewardsContract.withdraw(pullAmount);
+          console.log("bbb :",stakingToken.balanceOf(address(rewardsContract)));
         assertEq(
             rewardsContract.balances(address(this)),
-            amount-pullAmount,
+            amount+300-pullAmount,
             "Withdrawal should decrease user balance"
         );
         assertEq(
             rewardsContract.staked(),
-             amount-pullAmount,
+             amount+300-pullAmount,
             "Total staked amount should decrease"
         );
     }
@@ -57,10 +66,11 @@ contract TestStakingRewards is Test {
         );
     }
     function testUpdateRate() public {
-        rewardsContract.updateRate(6 days);
+        rewardsContract.updateRate(block.timestamp);
+          rewardsContract.updateRate(block.timestamp + 8 days);
         assertEq(
             rewardsContract.rate(),
-         6 days/rewardsContract.duration(),
+         (1000/rewardsContract.duration()),
             "Reward rate should be updated"
         );
     }
