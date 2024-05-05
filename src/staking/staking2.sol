@@ -26,7 +26,7 @@ contract StakingRewards {
         require(msg.sender == owner, "not authorized");
         _;
     }
-    // --- VIEWS
+    // --- VIEWS ,
     function lastTime() public view returns (uint256) {
         console.log("block.timestamp:  ",block.timestamp ,"finish:  ", finish);
         return block.timestamp < finish ? block.timestamp : finish;
