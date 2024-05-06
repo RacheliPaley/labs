@@ -1,114 +1,72 @@
 // SPDX-License-Identifier: MIT
-// https://solidity-by-example.org/defi/staking-rewards/
-// Code is a stripped down version of Synthetix
-pragma solidity ^0.8.20;
-import "@hack/staking/MyToken.sol";
+pragma solidity ^0.8.0;
 import "forge-std/console.sol";
-contract StakingRewards {
-    IERC20 public immutable stakingToken;
-    IERC20 public immutable rewardsToken;
+import "@hack/AMM/MyToken.sol";
+contract ConstantSumAMM {
     address public owner;
-    uint256 public duration = 7 days;   // [sec] reward duration
-    uint256 public finish   = 0;        // [sec] finish reward time
-    uint256 public updated;             // [sec] last time rate updated
-    uint256 public rate = 0;            // [per] reward rate per sec
-    uint256 public reward;              // reward per token stored
-    uint256 public staked;              // total staked
-    mapping(address => uint256) public paid;    // user reward per token paid
-    mapping(address => uint256) public rewards; // reward to be claimed
-    mapping(address => uint256) public balances;// staked per user
-    constructor(address st, address rt) {
+    uint public balanceA;
+    uint public balanceB;
+    uint public total;
+    uint public wad=10**18;
+    MyToken tokenA;
+    MyToken tokenB;
+    constructor(MyToken _tokenA, MyToken _tokenB) {
         owner = msg.sender;
-        stakingToken = IERC20(st);
-        rewardsToken = IERC20(rt);
+        tokenA=_tokenA;
+        tokenB=_tokenB;
     }
-    modifier onlyOwner() {
-        require(msg.sender == owner, "not authorized");
-        _;
+    function initialize(uint initialA, uint initialB) public {
+        require(msg.sender == owner, "Only the owner can initialize");
+        require(initialA > 0 && initialB > 0, "Initial amounts must be greater than zero");
+        require(balanceA == 0 && balanceB == 0, "Already initialized");
+        balanceA = initialA;
+        balanceB = initialB;
+        total=balanceA*balanceB;
     }
-    // --- VIEWS ,
-    function lastTime() public view returns (uint256) {
-        console.log("block.timestamp:  ",block.timestamp ,"finish:  ", finish);
-        return block.timestamp < finish ? block.timestamp : finish;
+    function price(uint256 denominator) public view returns (uint) {
+        require(balanceA > 0, "Balance of Token A must be greater than zero");
+        return total*wad/denominator;
     }
-    function accumulated() public view returns (uint256) {
-        console.log("stake: " , staked ,"reard:  ",reward);
-        if (staked == 0) {
-            return reward;
-        }
-        console.log("rate: ",rate);
-        return reward + (rate * (lastTime() - updated) * 1e18) / staked;
+    function getPayB2BuyA(uint desireA) public view returns(uint)   {
+       return balanceB- total/balanceA-desireA; //add wad
     }
-    function earned(address guy) public view returns (uint256) {
-        console.log("ee",((balances[guy] * (accumulated() - paid[guy])) / 1e18)
-                 + rewards[guy]);
-        return ((balances[guy] * (accumulated() - paid[guy])) / 1e18)
-                 + rewards[guy];
+     function getPayA2BuyB(uint desireB) public view returns(uint){
+       return balanceA -total/balanceB-desireB ;//add wad
     }
-    // --- STATE CHANGES
-    modifier updateReward(address guy) {
-        reward  = accumulated();
-       
-        updated = lastTime();
-        if (guy != address(0)) {
-            rewards[guy] = earned(guy);
-            paid[guy]    = reward;
-        }
-        _;
+    function tradeAToB(uint amountA,uint amountB) public payable {
+        require(amountA > 0, "Amount of Token A must be greater than zero");
+        //require(lastBalanceB >= amountA, "Insufficient balance of Token A");
+        require(amountA==getPayA2BuyB(amountB));
+        tokenA.transferFrom(msg.sender, address(this), amountA);
+         tokenB.transferFrom(address(this),msg.sender, amountB);
+        balanceA+=amountA;
+        balanceB-=amountB;
     }
-    function stake(uint256 amount) external updateReward(msg.sender) {
-        require(amount > 0, "amount = 0");
-        stakingToken.transferFrom(msg.sender, address(this), amount);
-        balances[msg.sender] += amount;
-        staked += amount;
-        console.log("s",staked);
+    function tradeBToA(uint amountB, uint amountA) public payable{
+       require(amountB > 0, "Amount of Token A must be greater than zero");
+        //require(lastBalanceB >= amountA, "Insufficient balance of Token A");
+        require(amountB==getPayB2BuyA(amountA));
+         tokenB.transferFrom(msg.sender, address(this), amountB);
+         tokenA.transferFrom(address(this),msg.sender, amountA);
+        balanceB+=amountB;
+        balanceA-=amountA;
     }
-    function withdraw(uint256 amount) external updateReward(msg.sender) {
-        require(amount > 0, "amount = 0");
-        require(amount<balances[msg.sender] ,"too much withdraw");
-        balances[msg.sender] -= amount;
-          console.log("before",staked);
-        staked -= amount;
-        console.log("after",staked);
-        stakingToken.transfer(msg.sender, amount);
+    function addLiquidity(uint amountA, uint amountB) payable public {
+        require(amountA > 0 && amountB > 0, "Both amounts must be greater than zero");
+        require(amountB==getPayB2BuyA(amountA),"the amount  of and b is not match");
+        require(tokenA.balanceOf(msg.sender)+tokenB.balanceOf(msg.sender)>amountA+amountB,"Insufficient balance");
+         tokenA.transferFrom(msg.sender, address(this), amountA);
+         tokenB.transferFrom(msg.sender, address(this), amountB);
+        balanceA += amountA;
+        balanceB += amountB;
     }
-    function getReward() external updateReward(msg.sender) {
-        uint256 r = rewards[msg.sender];
-          console.log("r" , r);
-        if (r > 0) {
-            rewards[msg.sender] = 0;
-            rewardsToken.transfer(msg.sender, r);
-          
-        }
-    }
-    // --- ADMINISTRATION
-    function setRewardsDuration(uint256 _duration) external onlyOwner {
-       
-        require(finish < block.timestamp, "reward duration not finished");
-        duration = _duration;
-        console.log("dur  " ,duration);
-    }
-    function updateRate(uint256 amount) external
-    onlyOwner updateReward(address(0)) {
-        if (block.timestamp >= finish) {
-            console.log("yes" ,amount ,"   " ,duration);
-            rate = amount / duration;
-        } else {
-            console.log("no");
-            uint remaining = (finish - block.timestamp);
-            uint leftover  = remaining * rate;
-            rate = (amount + leftover) / duration;
-        }
-        // Ensure the provided reward amount is not more than the balance
-        // in the contract. This keeps the reward rate in the right
-        // range, preventing overflows due to very high values of
-        // rewardRate in the earned and rewardsPerToken functions;
-        // Reward + leftover must be less than 2^256 / 10^18 to
-        // avoid overflow.
-        uint balance = rewardsToken.balanceOf(address(this));
-        console.log("balance" , balance , "rate  :" ,rate) ;
-        require(rate <= balance / duration, "provided reward too high");
-        finish  = block.timestamp + duration;
-        updated = block.timestamp;
+    function removeLiquidity(uint amountA, uint amountB) payable public {
+        require(amountA > 0 && amountB > 0, "Both amounts must be greater than zero");
+        require(amountB==getPayB2BuyA(amountA),"the amount  of and b is not match");
+        require(tokenA.balanceOf(msg.sender)+tokenB.balanceOf(msg.sender)>amountA+amountB,"Insufficient balance");
+         tokenA.transfer(msg.sender,amountA);
+         tokenA.transfer(msg.sender,amountB);
+        balanceA -= amountA;
+        balanceB -= amountB;
     }
 }
