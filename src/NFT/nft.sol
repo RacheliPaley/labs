@@ -5,9 +5,10 @@ import '../../lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol';
 contract NFT {
     address private owner;
     IERC721 public immutable NFT_TOKEN;
-    uint public startingBid;
-    uint public endingBid;
-    uint public startingPrice;
+    uint private startingBid;
+    uint private endingBid;
+    uint private startingPrice;
+    bool private started;
 
     struct Object {
         address _address;
@@ -29,7 +30,14 @@ contract NFT {
         endingBid = _endingBid;
         startingPrice = _startingPrice;
     }
-
+    function startAuction() public {
+        require(msg.sender == owner, "Only the owner can start the auction");
+        require(!started, "Auction already started");
+        
+        NFT_TOKEN.transferFrom(msg.sender, address(this), 1); // העברת ה-NFT מהמוכר לחוזה
+        started = true;
+        emit Start(); // הפעלת האירוע "Start"
+    }
     function addToBalances(address _addr, Object2 memory obj) internal {
         if (balances[_addr].isExist) {
             payable(msg.sender).transfer(balances[_addr].amount);
@@ -37,9 +45,7 @@ contract NFT {
         balances[_addr] = obj;
     }
 
-    function getAddressValue(address _addr) public view returns (bool) {
-        return balances[_addr].isExist;
-    }
+   
 
     function updateMax() internal {
         while (maxStack.length > 0 && !balances[maxStack[maxStack.length - 1]._address].isExist) {
@@ -67,13 +73,32 @@ contract NFT {
         payable(msg.sender).transfer(balances[user].amount);
     }
 
-    function returnQuotes() public {
-        require(block.timestamp > endingBid, "the Auction is active");
-        updateMax();
-        uint maxQuote = maxStack[maxStack.length - 1].amount;
+    function returnQuotesToPeople() public{
+  for (uint i = 0; i < maxStack.length - 1; i++) {
+            if(balances[maxStack[i]._address].isExist)
+            payable(maxStack[i]._address).transfer(maxStack[i].amount);
+        }
     }
+
+   function finishAuction() public {
+    require(block.timestamp > endingBid, "the Auction is active");
+    updateMax();
+
+    if (maxStack.length > 0) {
+        address winner = maxStack[maxStack.length - 1]._address;
+        uint winningAmount = maxStack[maxStack.length - 1].amount;
+        NFT_TOKEN.transferFrom(address(this), winner, 1);
+        payable(owner).transfer(winningAmount);
+returnQuotesToPeople();
+      
+    } else {
+      
+      returnQuotesToPeople();
+    }
+}
 
     receive() external payable {
         addQuote(msg.sender, msg.value);
     }
+      event Start();
 }
