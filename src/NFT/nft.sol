@@ -1,14 +1,15 @@
 pragma solidity ^0.8.0;
 
 import '../../lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol';
-
+import "forge-std/console.sol";
+import "./ERC721.sol";
 contract NFT {
     address private owner;
-    IERC721 public immutable NFT_TOKEN;
+    ERC721 public immutable NFT_TOKEN;
     uint private startingBid;
     uint private endingBid;
     uint private startingPrice;
-    bool private started;
+    bool public started;
 
     struct Object {
         address _address;
@@ -25,12 +26,13 @@ contract NFT {
 
     constructor(address _NFT_TOKEN, uint _startingBid, uint _endingBid, uint _startingPrice) {
         owner = msg.sender;
-        NFT_TOKEN = IERC721(_NFT_TOKEN);
+        NFT_TOKEN = ERC721(_NFT_TOKEN);
         startingBid = _startingBid;
         endingBid = _endingBid;
         startingPrice = _startingPrice;
     }
     function startAuction() public {
+        console.log("start");
         require(msg.sender == owner, "Only the owner can start the auction");
         require(!started, "Auction already started");
         
