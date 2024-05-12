@@ -1,53 +1,81 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.0;
+
+import "src/NFT/myToken.sol";
 import "src/NFT/nft.sol";
 import "foundry-huff/HuffDeployer.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-contract TestNFT is Test {
-
-    NFT nft;
-    IERC721 _nftToken;
+contract NFTTest is Test {
+    NFT public nft;
+    MyERC721 public erc721;
+    uint public endingBid = 123;
+    uint public startingPrice = 100;
+    uint public tokenId = 1;
+    address public owner = address(123);
 
     function setUp() public {
-        nft = new NFT(address(this), 100, 2000, 50); // יצירת חוזה חכם חדש עבור כל בדיקה
-        _nftToken = IERC721(address(nft));
+        // Deploy NFT and ERC721 contracts for testing
+        vm.startPrank(owner);
+        nft = new NFT();
+        string memory name = "yael";
+        string memory symbole = "rachel";
+        erc721 = new MyERC721(name, symbole);
+        erc721.mint(owner, tokenId);
+        erc721.approve(address(nft), tokenId);
     }
 
+    // Test function to check the start of the auction
     function testStartAuction() public {
-        console.log("fff");
-        nft.startAuction();
-        assertTrue(nft.started(), "Auction should have started");
+        nft.start(address(erc721), endingBid, startingPrice, tokenId);
+        // Assert the state after calling start
+        assertEq(nft.endingBid(), endingBid);
+        assertEq(nft.startingPrice(), startingPrice);
+        assertEq(nft.tokenId(), tokenId);
+        assertEq(nft.started(), true);
+        assertEq(erc721.ownerOf(tokenId), address(nft));
     }
 
-    // function testAddQuote() public {
-    //     nft.startAuction();
-    //     nft.addQuote(address(this), 120);
-    //      assertEq(nft.maxStackLength(), 1, "Max stack length should be 1 after adding a quote");
-    // }
+    // Test function to add a quote to the auction
+    function testAddQuote() public {
+        address addr = vm.addr(12345);
+        vm.startPrank(addr);
+        vm.deal(address(addr), 5000);
+        uint256 quoteAmount = 150; // Higher than the starting price
+        nft.addQuote{value: quoteAmount}();
+        // Assert the state after adding a quote
+        (address maxStackAddress, uint256 maxStackAmount) = nft.getMaxStack();
+        assertEq(maxStackAddress, address(addr), "Unexpected maxStackAddress");
+        assertEq(maxStackAmount, quoteAmount, "Unexpected maxStackAmount");
+    }
 
-    // function testCancelQuote() public {
-    //     nft.startAuction();
-    //     nft.addQuote(address(this), 120);
-    //     nft.cancelQuote(address(this));
-    //      assertEq(nft.balances(address(this)), 0, "Balance should be 0 after canceling quote");
-    // }
+    // Test function to cancel a quote from the auction
+    function testCancelQuote() public {
+        address addr = vm.addr(12345);
+        vm.startPrank(addr);
+        vm.deal(address(addr), 5000);
+        uint256 quoteAmount = 150; // Higher than the starting price
+        nft.addQuote{value: quoteAmount}();
+        nft.cancelQuote();
+        // Assert the state after canceling the quote
+        assert(!nft.getIsExist());
+    }
 
-    // function testFinishAuction() public {
-    //     nft.startAuction();
-    //     nft.addQuote(address(this), 120);
-    //     nft.finishAuction();
-    //       assertEq(_nftToken.ownerOf(1), address(this), "Contract should become owner of the NFT after auction finishes");
-    // }
-
-    // function testSafety() public {
-    //     nft.startAuction();
-    //     nft.addQuote(address(this), 120);
-    //     nft.addQuote(address(0x01), 150);
-    //     nft.addQuote(address(this), 140);
-    //       assertEq(nft.maxStackAmount(), 150, "Max stack amount should be 150");
-    // }
-
-
+    // Test function to end the auction
+    function testEndAuction() public {
+        nft.start(address(erc721), endingBid, startingPrice, tokenId);
+        address addr = vm.addr(12345);
+        vm.startPrank(addr);
+        vm.deal(address(addr), 5000);
+        uint256 quoteAmount = 150; // Higher than the starting price
+        nft.addQuote{value: quoteAmount}();
+        vm.warp(124); // Fast forward time to simulate end of auction
+        vm.stopPrank();
+        vm.startPrank(owner);
+        nft.end();
+        // Assert the state after ending the auction
+        assertEq(nft.started(), false, "Auction is still active after ending");
+        assertEq(erc721.ownerOf(tokenId), address(addr), "Unexpected token owner after ending auction");
+        assertEq(address(owner).balance, 150, "Incorrect balance after ending auction");
+    }
 }
