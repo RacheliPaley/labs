@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 
 contract NFTAuction {
     address private owner;
-    ERC721 public nftToken;
+    MyERC721 public nftToken;
     uint public startingBid;
     uint public endingBid;
     uint public startingPrice;
@@ -37,7 +37,7 @@ contract NFTAuction {
     }
 
     function start(address _nftToken, uint _endingBid, uint _startingPrice, uint _tokenId) external onlyOwner {
-        nftToken = ERC721(_nftToken);
+        nftToken = MyERC721(_nftToken);
         endingBid = _endingBid;
         startingPrice = _startingPrice;
         tokenId = _tokenId;
