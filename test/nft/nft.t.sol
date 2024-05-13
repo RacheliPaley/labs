@@ -37,12 +37,12 @@ contract NFTAuctionTest is Test {
     }
 
     // Test function to add a quote to the auction
-    function testAddQuote() public {
+    function testAddBidd() public {
         address addr = vm.addr(12345);
         vm.startPrank(addr);
         vm.deal(address(addr), 5000);
         uint256 quoteAmount = 150; // Higher than the starting price
-        nft.addQuote{value: quoteAmount}();
+        nft.addBidd{value: quoteAmount}();
         // Assert the state after adding a quote
         (address maxStackAddress, uint256 maxStackAmount) = nft.getMaxStack();
         assertEq(maxStackAddress, address(addr), "Unexpected maxStackAddress");
@@ -50,13 +50,13 @@ contract NFTAuctionTest is Test {
     }
 
     // Test function to cancel a quote from the auction
-    function testCancelQuote() public {
+    function testCancelBidd() public {
         address addr = vm.addr(12345);
         vm.startPrank(addr);
         vm.deal(address(addr), 5000);
         uint256 quoteAmount = 150; // Higher than the starting price
-        nft.addQuote{value: quoteAmount}();
-        nft.cancelQuote();
+        nft.addBidd{value: quoteAmount}();
+        nft.cancelBidd();
         // Assert the state after canceling the quote
         assert(!nft.getIsExist());
     }
@@ -68,7 +68,7 @@ contract NFTAuctionTest is Test {
         vm.startPrank(addr);
         vm.deal(address(addr), 5000);
         uint256 quoteAmount = 150; // Higher than the starting price
-        nft.addQuote{value: quoteAmount}();
+        nft.addBidd{value: quoteAmount}();
         vm.warp(124); // Fast forward time to simulate end of auction
         vm.stopPrank();
         vm.startPrank(owner);
