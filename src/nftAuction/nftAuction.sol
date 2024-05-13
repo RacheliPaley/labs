@@ -117,7 +117,7 @@ contract NFTAuction {
             payable(address(owner)).transfer(amount);
             address bidderAddress = maxStack[maxStack.length - 1]._address;
             nftToken.transferFrom(address(this), bidderAddress, tokenId);
-            returnBidd();
+            // returnBidd();
             started = false;
         }
     }
