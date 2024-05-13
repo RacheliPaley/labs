@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
-import "src/NFT/myToken.sol";
-import "src/NFT/nftAuction.sol";
+import "src/nftAuction/myToken.sol";
+import "src/nftAuction/nftAuction.sol";
 import "foundry-huff/HuffDeployer.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
