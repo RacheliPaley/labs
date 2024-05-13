@@ -1,13 +1,13 @@
 pragma solidity ^0.8.0;
 
 import "src/NFT/myToken.sol";
-import "src/NFT/nft.sol";
+import "src/NFT/nftAuction.sol";
 import "foundry-huff/HuffDeployer.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-contract NFTTest is Test {
-    NFT public nft;
+contract NFTAuctionTest is Test {
+    NFTAuction public nft;
     MyERC721 public erc721;
     uint public endingBid = 123;
     uint public startingPrice = 100;
@@ -17,7 +17,7 @@ contract NFTTest is Test {
     function setUp() public {
         // Deploy NFT and ERC721 contracts for testing
         vm.startPrank(owner);
-        nft = new NFT();
+        nft = new  NFTAuction();
         string memory name = "yael";
         string memory symbole = "rachel";
         erc721 = new MyERC721(name, symbole);
