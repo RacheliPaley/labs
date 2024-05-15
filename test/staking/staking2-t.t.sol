@@ -20,7 +20,7 @@
 //         stakingToken.approve(address(rewardsContract), 1000);
 //         rewardsContract.stake(500);
 //         console.log("bbb :",stakingToken.balanceOf(address(rewardsContract)));
-     
+
 //         assertEq(
 //             rewardsContract.balances(address(this)),
 //             500,
@@ -39,7 +39,6 @@
 //         rewardsContract.stake(amount);
 //         uint pullAmount = 400;
 //         console.log("bbb :",stakingToken.balanceOf(address(rewardsContract)));
-       
 
 //         vm.warp(block.timestamp + 14 days);
 //          rewardsContract.stake(300);
@@ -89,7 +88,7 @@
 //         rewardsContract.setRewardsDuration(7 days);
 //         rewardsContract.updateRate(100);
 //         uint256 initialAccumulated = rewardsContract.accumulated();
-       
+
 //         console.log("before",rewardsContract.accumulated());
 //         vm.warp(block.timestamp + 1 days);
 //         uint256 afterOneDay = rewardsContract.accumulated();

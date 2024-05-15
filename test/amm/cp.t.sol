@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
+
 import "forge-std/Test.sol"; // Assuming you're using Foundry/Hardhat for testing
 // Importing your token contract
 import "src/amm/cp.sol";
@@ -12,8 +13,8 @@ contract SwapTest is Test {
     MyToken public token1;
     address user1;
     address user2;
-    uint constant INITIAL_RESERVE0 = 1000;
-    uint constant INITIAL_RESERVE1 = 2000;
+    uint256 constant INITIAL_RESERVE0 = 1000;
+    uint256 constant INITIAL_RESERVE1 = 2000;
 
     function setUp() public {
         // Deploy tokens
@@ -30,7 +31,7 @@ contract SwapTest is Test {
     }
 
     function testValidSwap() public {
-        uint swapAmount = 100;
+        uint256 swapAmount = 100;
         // Mint tokens for user1
         user1 = address(0x123); // Set up user1 address
         console.log("user1", address(user1));
@@ -41,30 +42,18 @@ contract SwapTest is Test {
         token0.approve(address(amm), 20000); // Ensure approval to the correct contract
         token0.mint(2000);
         // Get initial reserves
-        uint reserve0Before = amm.reserve0();
-        uint reserve1Before = amm.reserve1();
+        uint256 reserve0Before = amm.reserve0();
+        uint256 reserve1Before = amm.reserve1();
         console.log("Initial reserves", reserve0Before, reserve1Before); // Log initial reserves
-        uint amountOut = amm.swap(address(token0), swapAmount);
+        uint256 amountOut = amm.swap(address(token0), swapAmount);
         // Calculate expected output after the swap
-        uint expectedOut = (reserve1Before * ((swapAmount * 997) / 1000)) /
-            (reserve0Before + ((swapAmount * 997) / 1000));
+        uint256 expectedOut =
+            (reserve1Before * ((swapAmount * 997) / 1000)) / (reserve0Before + ((swapAmount * 997) / 1000));
         // Ensure the returned amountOut matches the expected value
-        assertEq(
-            amountOut,
-            expectedOut,
-            "Returned amountOut doesn't match expected value"
-        );
+        assertEq(amountOut, expectedOut, "Returned amountOut doesn't match expected value");
         // Verify the reserves have updated correctly after the swap
-        assertEq(
-            amm.reserve0(),
-            reserve0Before + swapAmount,
-            "Reserve0 not updated correctly"
-        );
-        assertEq(
-            amm.reserve1(),
-            reserve1Before - amountOut,
-            "Reserve1 not updated correctly"
-        );
+        assertEq(amm.reserve0(), reserve0Before + swapAmount, "Reserve0 not updated correctly");
+        assertEq(amm.reserve1(), reserve1Before - amountOut, "Reserve1 not updated correctly");
         console.log("Reserves after swap", amm.reserve0(), amm.reserve1()); // Log updated reserves
     }
 

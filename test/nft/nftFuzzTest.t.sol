@@ -36,27 +36,30 @@ contract NFTAuctionTest is Test {
         assertEq(erc721.ownerOf(tokenId), address(nft));
     }
 
-    // Test function to add a quote to the auction
-    function testAddBidd() public {
+    function testAddBiddFuzz(uint8 quoteAmount) public {
+        vm.assume(quoteAmount > startingPrice);
         nft.start(address(erc721), endingBid, startingPrice, tokenId);
-        console.log(nft.started());
+        console.log("a", quoteAmount);
         address addr = vm.addr(12345);
         vm.startPrank(addr);
         vm.deal(address(addr), 5000);
-        uint256 quoteAmount = 150; // Higher than the starting price
         nft.addBidd{value: quoteAmount}();
-        // Assert the state after adding a quote
         (address maxStackAddress, uint256 maxStackAmount) = nft.getMaxStack();
         assertEq(maxStackAddress, address(addr), "Unexpected maxStackAddress");
         assertEq(maxStackAmount, quoteAmount, "Unexpected maxStackAmount");
     }
 
+    // Test function to add a quote to the auction
+
     // Test function to cancel a quote from the auction
-    function testCancelBidd() public {
+    function testCancelBiddFuzz(uint8 quoteAmount) public {
+        
+        nft.start(address(erc721), endingBid, startingPrice, tokenId);
+        vm.assume(quoteAmount > startingPrice);
         address addr = vm.addr(12345);
         vm.startPrank(addr);
         vm.deal(address(addr), 5000);
-        uint256 quoteAmount = 150; // Higher than the starting price
+
         nft.addBidd{value: quoteAmount}();
         nft.cancelBidd();
         // Assert the state after canceling the quote
