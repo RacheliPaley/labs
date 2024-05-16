@@ -53,7 +53,6 @@ contract NFTAuctionTest is Test {
 
     // Test function to cancel a quote from the auction
     function testCancelBiddFuzz(uint8 quoteAmount) public {
-        
         nft.start(address(erc721), endingBid, startingPrice, tokenId);
         vm.assume(quoteAmount > startingPrice);
         address addr = vm.addr(12345);
