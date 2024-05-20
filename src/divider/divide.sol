@@ -41,6 +41,8 @@ contract Distribute {
         0x1Eb3c3595F52788CBF3F2138652cC36fCb2EB673 //Ruth Klirs
     ];
 
+    receive() external payable {}
+
     fallback() external payable {
         uint256 share = msg.value / addresses.length;
 
