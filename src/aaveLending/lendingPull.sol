@@ -1,10 +1,18 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.7;
 
+// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+// import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+//import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
+import "foundry-chainlink-toolkit/src/interfaces/feeds/AggregatorV3Interface.sol";
+
 import "./ISwapRouter.sol";
+
 import "./math.sol";
 import "./myToken.sol";
 import "./aaveLibrary.sol";
@@ -13,10 +21,10 @@ interface IUniswapRouter is ISwapRouter {
     function refundETH() external payable;
 }
 
-contract BondToken is Ownable, Math {
-    using SafeMath for uint256;
-    using AaveLibrary for ILendingPool;
-    using AaveLibrary for IWETHGateway;
+contract BondToken is Ownable, Math2 {
+   using Math2 for uint256;
+   // using aaveLibrary for ILendingPool;
+  //  using aaveLibrary for IWETHGateway;
 
     uint256 public totalBorrowed;
     uint256 public totalReserve;

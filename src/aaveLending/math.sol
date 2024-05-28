@@ -3,8 +3,8 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
-contract Math {
-    using SafeMath for uint256;
+contract Math2 {
+    using Math for uint256;
 
     uint256 private constant EXP_SCALE = 1e18;
     uint256 private constant HALF_EXP_SCALE = EXP_SCALE / 2;

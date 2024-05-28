@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.7;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 interface ILendingPool {
     function deposit(
         address asset,
