@@ -44,14 +44,20 @@ import opened Tx
         ((x * y) + (w / 2)) / w
     }
 
-    function WDiv(x: u256 , y:256) :u256 
-       requires y  > 0 
-       requires  (x as nat) /(y as nat) <= MAX_U256 as nat {
-            var m: u256 := Div(x,y);
-        var w: u256 := WAD / 2;
-        assume {:axiom} (m as nat) + (w as nat) <= MAX_U256 as nat;
-        (Add(m , w))/WAD
-       }
+   
+   
+   
+    function Wdiv(x: u256, y:u256) : (r: u256)
+    requires (x as nat) * (WAD as nat) < MAX_U256
+    requires Mul(x,WAD) as nat + (y/2) as nat <= MAX_U256 as nat
+    requires y != 0
+    ensures r < MAX_U256 as u256{
+        var m: u256 := Mul(x,WAD);
+        var w: u256 := y / 2;
+        var z: u256 := Add(m,w);
+        z / y
+    }
+     
 
 
 
