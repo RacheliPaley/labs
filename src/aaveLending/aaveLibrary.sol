@@ -5,24 +5,24 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface ILendingPool {
     function deposit(
-        address asset,
-        uint256 amount,
-        address onBehalfOf,
-        uint16 referralCode
+        address asset, //token
+        uint256 amount, // amount
+        address onBehalfOf, //msg.sender
+        uint16 referralCode //?
     ) external;
 
-    function withdraw(
-        address asset,
-        uint256 amount,
-        address to
+    function withdraw(  
+        address asset, //token
+        uint256 amount, //amount
+        address to     // msg.sender
     ) external returns (uint256);
 }
 
-interface IWETHGateway {
+interface IWETHGateway {   //wrap eth
     function depositETH(
         address lendingPool,
         address onBehalfOf,
-        uint16 referralCode
+        uint16 referralCode  //?
     ) external payable;
 
     function withdrawETH(
@@ -33,18 +33,19 @@ interface IWETHGateway {
 }
 
 library AaveLibrary {
-    function depositToAave(
-        ILendingPool aave,
-        address asset,
-        uint256 amount,
+    function depositToAave( 
+        ILendingPool aave, // dai
+        address asset,  //token
+        uint256 amount,               
+
         address onBehalfOf
     ) internal {
-        IERC20(asset).approve(address(aave), amount);
+        IERC20(asset).approve(address(aave), amount);              
         aave.deposit(asset, amount, onBehalfOf, 0);
     }
 
-    function withdrawFromAave(
-        ILendingPool aave,
+    function withdrawFromAave(  
+        ILendingPool aave,                        
         address asset,
         uint256 amount,
         address to
