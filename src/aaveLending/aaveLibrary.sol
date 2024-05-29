@@ -11,63 +11,46 @@ interface ILendingPool {
         uint16 referralCode //?
     ) external;
 
-    function withdraw(  
+    function withdraw(
         address asset, //token
         uint256 amount, //amount
-        address to     // msg.sender
+        address to // msg.sender
     ) external returns (uint256);
 }
 
-interface IWETHGateway {   //wrap eth
+interface IWETHGateway { //wrap eth
     function depositETH(
         address lendingPool,
         address onBehalfOf,
-        uint16 referralCode  //?
+        uint16 referralCode //?
     ) external payable;
 
-    function withdrawETH(
-        address lendingPool,
-        uint256 amount,
-        address onBehalfOf
-    ) external;
+    function withdrawETH(address lendingPool, uint256 amount, address onBehalfOf) external;
 }
 
 library AaveLibrary {
-    function depositToAave( 
-        ILendingPool aave, // dai
-        address asset,  //token
-        uint256 amount,               
+    
+    ILendingPool public constant aave = ILendingPool(0xE0fBa4Fc209b4948668006B2bE61711b7f465bAe);
+    IWETHGateway public constant wethGateway = IWETHGateway(0xA61ca04DF33B72b235a8A28CfB535bb7A5271B70);
+    IERC20 public constant dai = IERC20(0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD);
+    IERC20 public constant aDai = IERC20(0xdCf0aF9e59C002FA3AA091a46196b37530FD48a8);
+    IERC20 public constant aWeth = IERC20(0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347);
 
-        address onBehalfOf
-    ) internal {
-        IERC20(asset).approve(address(aave), amount);              
-        aave.deposit(asset, amount, onBehalfOf, 0);
+    function sendDaiToAave(uint256 _amount) internal {
+        dai.approve(address(aave), _amount);
+        aave.deposit(address(dai), _amount, address(this), 0);
     }
 
-    function withdrawFromAave(  
-        ILendingPool aave,                        
-        address asset,
-        uint256 amount,
-        address to
-    ) internal returns (uint256) {
-        return aave.withdraw(asset, amount, to);
+    function withdrawDaiFromAave(uint256 _amount) internal {
+        aave.withdraw(address(dai), _amount, msg.sender);
     }
 
-    function depositWethToAave(
-        IWETHGateway wethGateway,
-        address aave,
-        uint256 amount,
-        address onBehalfOf
-    ) internal {
-        wethGateway.depositETH{value: amount}(aave, onBehalfOf, 0);
+    function sendWethToAave(uint256 _amount) internal {
+        wethGateway.depositETH{value: _amount}(address(aave), address(this), 0);
     }
 
-    function withdrawWethFromAave(
-        IWETHGateway wethGateway,
-        address aave,
-        uint256 amount,
-        address to
-    ) internal {
-        wethGateway.withdrawETH(aave, amount, to);
+    function withdrawWethFromAave(uint256 _amount) internal {
+        aWeth.approve(address(wethGateway), _amount);
+        wethGateway.withdrawETH(address(aave), _amount, address(this));
     }
 }

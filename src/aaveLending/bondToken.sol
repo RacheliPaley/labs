@@ -1,22 +1,14 @@
-   
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@foundry-chainlink-toolkit/src/interfaces/feeds/AggregatorV2V3Interface.sol";
-//import "/root/labs/lib/foundry-chainlink-toolkit/src/interfaces/feeds/AggregatorV2V3Interface.sol";
-//import "/root/labs/lib/foundry-chainlink-toolkit/src/interfaces/feeds/AggregatorV3Interface.sol";
+import "@chainlink/contracts/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./ISwapRouter.sol";
-
 import "./math.sol";
 import "./myToken.sol";
 import "./aaveLibrary.sol";
-
-
-
-
 
 interface IUniswapRouter is ISwapRouter {
     function refundETH() external payable;
@@ -26,6 +18,12 @@ contract BondToken is Ownable, Math {
     using SafeMath for uint256;
     using AaveLibrary for ILendingPool;
     using AaveLibrary for IWETHGateway;
+
+    IERC20 public constant dai = IERC20(0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD);
+    IERC20 public constant aDai = IERC20(0xdCf0aF9e59C002FA3AA091a46196b37530FD48a8);
+    IERC20 public constant aWeth = IERC20(0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347);
+    IWETHGateway public constant wethGateway = IWETHGateway(0xA61ca04DF33B72b235a8A28CfB535bb7A5271B70);
+    ILendingPool public constant aave = ILendingPool(0xE0fBa4Fc209b4948668006B2bE61711b7f465bAe);
     uint256 public totalBorrowed;
     uint256 public totalReserve;
     uint256 public totalDeposit;
@@ -35,49 +33,39 @@ contract BondToken is Ownable, Math {
     uint256 public baseRate = 20000000000000000;
     uint256 public fixedAnnuBorrowRate = 300000000000000000;
     MyERC20 public bondToken;
-    ILendingPool public constant aave =
-        ILendingPool(0xE0fBa4Fc209b4948668006B2bE61711b7f465bAe);
-    IWETHGateway public constant wethGateway =
-        IWETHGateway(0xA61ca04DF33B72b235a8A28CfB535bb7A5271B70);
-    IERC20 public constant dai =
-        IERC20(0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD);
-    IERC20 public constant aDai =
-        IERC20(0xdCf0aF9e59C002FA3AA091a46196b37530FD48a8);
-    IERC20 public constant aWeth =
-        IERC20(0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347);
     AggregatorV3Interface internal constant priceFeed =
         AggregatorV3Interface(0x9326BFA02ADD2366b30bacB125260Af641031331);
-    IUniswapRouter public constant uniswapRouter =
-        IUniswapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
-    IERC20 private constant weth =
-        IERC20(0xd0A1E359811322d97991E03f863a0C30C2cF029C);
+    IUniswapRouter public constant uniswapRouter = IUniswapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
+    IERC20 private constant weth = IERC20(0xd0A1E359811322d97991E03f863a0C30C2cF029C);
 
     mapping(address => uint256) private usersCollateral;
     mapping(address => uint256) private usersBorrowed;
 
-    constructor() ERC20("Bond DAI", "bDAI") {}
+    constructor() Ownable(msg.sender) {
+        bondToken = new MyERC20();
+    }
 
     function bondAsset(uint256 _amount) external {
         dai.transferFrom(msg.sender, address(this), _amount);
         totalDeposit += _amount;
-        _sendDaiToAave(_amount);
+        AaveLibrary.sendDaiToAave(_amount);
         uint256 bondsToMint = getExp(_amount, getExchangeRate());
-       bondToken.mint(msg.sender, bondsToMint);
+        bondToken.mint(msg.sender, bondsToMint);
     }
 
     function unbondAsset(uint256 _amount) external {
-        require(_amount <= balanceOf(msg.sender), "Not enough bonds!");
+        require(_amount <= bondToken.balanceOf(msg.sender), "Not enough bonds!");
         uint256 daiToReceive = mulExp(_amount, getExchangeRate());
         totalDeposit -= daiToReceive;
-       bondToken.burn(_amount);
-        _withdrawDaiFromAave(daiToReceive);
+        bondToken.burn(msg.sender, _amount);
+        AaveLibrary.withdrawDaiFromAave(daiToReceive);
     }
 
     function addCollateral() external payable {
         require(msg.value != 0, "Cant send 0 ethers");
         usersCollateral[msg.sender] += msg.value;
         totalCollateral += msg.value;
-        _sendWethToAave(msg.value);
+        AaveLibrary.sendWethToAave(msg.value);
     }
 
     function removeCollateral(uint256 _amount) external {
@@ -90,7 +78,7 @@ contract BondToken is Ownable, Math {
         require(amountToRemove < amountLeft, "Not enough collateral to remove");
         usersCollateral[msg.sender] -= _amount;
         totalCollateral -= _amount;
-        _withdrawWethFromAave(_amount);
+        AaveLibrary.withdrawWethFromAave(_amount);
         payable(address(this)).transfer(_amount);
     }
 
@@ -98,7 +86,7 @@ contract BondToken is Ownable, Math {
         require(_amount <= _borrowLimit(), "No collateral enough");
         usersBorrowed[msg.sender] += _amount;
         totalBorrowed += _amount;
-        _withdrawDaiFromAave(_amount);
+        AaveLibrary.withdrawDaiFromAave(_amount);
     }
 
     function repay(uint256 _amount) external {
@@ -108,14 +96,10 @@ contract BondToken is Ownable, Math {
         usersBorrowed[msg.sender] -= paid;
         totalBorrowed -= paid;
         totalReserve += fee;
-        _sendDaiToAave(_amount);
+        AaveLibrary.sendDaiToAave(_amount);
     }
 
-    function calculateBorrowFee(uint256 _amount)
-        public
-        view
-        returns (uint256, uint256)
-    {
+    function calculateBorrowFee(uint256 _amount) public view returns (uint256, uint256) {
         uint256 borrowRate = _borrowRate();
         uint256 fee = mulExp(_amount, borrowRate);
         uint256 paid = _amount.sub(fee);
@@ -128,7 +112,7 @@ contract BondToken is Ownable, Math {
         uint256 borrowed = usersBorrowed[_user];
         uint256 collateralToUsd = mulExp(wethPrice, collateral);
         if (borrowed > percentage(collateralToUsd, maxLTV)) {
-            _withdrawWethFromAave(collateral);
+            AaveLibrary.withdrawWethFromAave(collateral);
             uint256 amountDai = _convertEthToDai(collateral);
             totalReserve += amountDai;
             usersBorrowed[_user] = 0;
@@ -138,12 +122,12 @@ contract BondToken is Ownable, Math {
     }
 
     function getExchangeRate() public view returns (uint256) {
-        if (totalSupply() == 0) {
+        if (bondToken.totalSupply() == 0) {
             return 1000000000000000000;
         }
         uint256 cash = getCash();
         uint256 num = cash.add(totalBorrowed).add(totalReserve);
-        return getExp(num, totalSupply());
+        return getExp(num, bondToken.totalSupply());
     }
 
     function getCash() public view returns (uint256) {
@@ -154,7 +138,7 @@ contract BondToken is Ownable, Math {
         uint256 aWethBalance = aWeth.balanceOf(address(this));
         if (aWethBalance > totalCollateral) {
             uint256 rewards = aWethBalance.sub(totalCollateral);
-            _withdrawWethFromAave(rewards);
+            AaveLibrary.withdrawWethFromAave(rewards);
             ethTreasury += rewards;
         }
     }
@@ -170,28 +154,8 @@ contract BondToken is Ownable, Math {
         require(amountLocked > 0, "No collateral found");
         uint256 amountBorrowed = usersBorrowed[msg.sender];
         uint256 wethPrice = uint256(_getLatestPrice());
-        uint256 amountLeft = mulExp(amountLocked, wethPrice).sub(
-            amountBorrowed
-        );
+        uint256 amountLeft = mulExp(amountLocked, wethPrice).sub(amountBorrowed);
         return percentage(amountLeft, maxLTV);
-    }
-
-    function _sendDaiToAave(uint256 _amount) internal {
-        dai.approve(address(aave), _amount);
-        aave.deposit(address(dai), _amount, address(this), 0);
-    }
-
-    function _withdrawDaiFromAave(uint256 _amount) internal {
-        aave.withdraw(address(dai), _amount, msg.sender);
-    }
-
-    function _sendWethToAave(uint256 _amount) internal {
-        wethGateway.depositETH{value: _amount}(address(aave), address(this), 0);
-    }
-
-    function _withdrawWethFromAave(uint256 _amount) internal {
-        aWeth.approve(address(wethGateway), _amount);
-        wethGateway.withdrawETH(address(aave), _amount, address(this));
     }
 
     function getCollateral() external view returns (uint256) {
@@ -207,11 +171,11 @@ contract BondToken is Ownable, Math {
     }
 
     function _getLatestPrice() public view returns (int256) {
-        (, int256 price, , , ) = priceFeed.latestRoundData();
-        return price * 10**10;
+        (, int256 price,,,) = priceFeed.latestRoundData();
+        return price * 10 ** 10;
     }
 
-    function _utilizationRatio() public view returns (uint256) {
+    function _utilizationRatio() public view returns (uint256) { // The ratio of Borrowed to deposits
         return getExp(totalBorrowed, totalDeposit);
     }
 
@@ -222,7 +186,7 @@ contract BondToken is Ownable, Math {
     }
 
     function _borrowRate() public view returns (uint256) {
-        uint256 uRatio = _utilizationRatio();
+        uint256 uRatio = _utilizationRatio(); //The ratio of borrows to deposits
         uint256 interestMul = _interestMultiplier();
         uint256 product = mulExp(uRatio, interestMul);
         return product.add(baseRate);
@@ -246,21 +210,11 @@ contract BondToken is Ownable, Math {
         uint256 amountOutMinimum = 1;
         uint160 sqrtPriceLimitX96 = 0;
 
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-            .ExactInputSingleParams(
-                tokenIn,
-                tokenOut,
-                fee,
-                recipient,
-                deadline,
-                amountIn,
-                amountOutMinimum,
-                sqrtPriceLimitX96
-            );
-
-        uint256 amountOut = uniswapRouter.exactInputSingle{value: _amount}(
-            params
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams(
+            tokenIn, tokenOut, fee, recipient, deadline, amountIn, amountOutMinimum, sqrtPriceLimitX96
         );
+
+        uint256 amountOut = uniswapRouter.exactInputSingle{value: _amount}(params);
         uniswapRouter.refundETH();
         return amountOut;
     }
