@@ -49,13 +49,13 @@ contract BondToken is Ownable, Math {
         dai.transferFrom(msg.sender, address(this), _amount);
         totalDeposit += _amount;
         AaveLibrary.sendDaiToAave(_amount);
-        uint256 bondsToMint = getExp(_amount, getExchangeRate());
+        uint256 bondsToMint = wdiv(_amount, getExchangeRate());
         bondToken.mint(msg.sender, bondsToMint);
     }
 
     function unbondAsset(uint256 _amount) external {
         require(_amount <= bondToken.balanceOf(msg.sender), "Not enough bonds!");
-        uint256 daiToReceive = mulExp(_amount, getExchangeRate());
+        uint256 daiToReceive = wmul(_amount, getExchangeRate());
         totalDeposit -= daiToReceive;
         bondToken.burn(msg.sender, _amount);
         AaveLibrary.withdrawDaiFromAave(daiToReceive);
@@ -73,8 +73,8 @@ contract BondToken is Ownable, Math {
         uint256 collateral = usersCollateral[msg.sender];
         require(collateral > 0, "Dont have any collateral");
         uint256 borrowed = usersBorrowed[msg.sender];
-        uint256 amountLeft = mulExp(collateral, wethPrice).sub(borrowed);
-        uint256 amountToRemove = mulExp(_amount, wethPrice);
+        uint256 amountLeft = wmul(collateral, wethPrice).sub(borrowed);
+        uint256 amountToRemove = wmul(_amount, wethPrice);
         require(amountToRemove < amountLeft, "Not enough collateral to remove");
         usersCollateral[msg.sender] -= _amount;
         totalCollateral -= _amount;
@@ -101,7 +101,7 @@ contract BondToken is Ownable, Math {
 
     function calculateBorrowFee(uint256 _amount) public view returns (uint256, uint256) {
         uint256 borrowRate = _borrowRate();
-        uint256 fee = mulExp(_amount, borrowRate);
+        uint256 fee = wdiv(_amount, borrowRate);
         uint256 paid = _amount.sub(fee);
         return (fee, paid);
     }
@@ -110,7 +110,7 @@ contract BondToken is Ownable, Math {
         uint256 wethPrice = uint256(_getLatestPrice());
         uint256 collateral = usersCollateral[_user];
         uint256 borrowed = usersBorrowed[_user];
-        uint256 collateralToUsd = mulExp(wethPrice, collateral);
+        uint256 collateralToUsd = wmul(wethPrice, collateral);
         if (borrowed > percentage(collateralToUsd, maxLTV)) {
             AaveLibrary.withdrawWethFromAave(collateral);
             uint256 amountDai = _convertEthToDai(collateral);
@@ -127,7 +127,7 @@ contract BondToken is Ownable, Math {
         }
         uint256 cash = getCash();
         uint256 num = cash.add(totalBorrowed).add(totalReserve);
-        return getExp(num, bondToken.totalSupply());
+        return wdiv(num, bondToken.totalSupply());
     }
 
     function getCash() public view returns (uint256) {
@@ -154,7 +154,7 @@ contract BondToken is Ownable, Math {
         require(amountLocked > 0, "No collateral found");
         uint256 amountBorrowed = usersBorrowed[msg.sender];
         uint256 wethPrice = uint256(_getLatestPrice());
-        uint256 amountLeft = mulExp(amountLocked, wethPrice).sub(amountBorrowed);
+        uint256 amountLeft = wmul(amountLocked, wethPrice).sub(amountBorrowed);
         return percentage(amountLeft, maxLTV);
     }
 
@@ -176,26 +176,26 @@ contract BondToken is Ownable, Math {
     }
 
     function _utilizationRatio() public view returns (uint256) { // The ratio of Borrowed to deposits
-        return getExp(totalBorrowed, totalDeposit);
+        return wdiv(totalBorrowed, totalDeposit);
     }
 
     function _interestMultiplier() public view returns (uint256) {
-        uint256 uRatio = _utilizationRatio();
+        uint256 uRatio = _utilizationRatio();   //The ratio of borrows to deposits
         uint256 num = fixedAnnuBorrowRate.sub(baseRate);
-        return getExp(num, uRatio);
+        return wdiv(num, uRatio);
     }
 
     function _borrowRate() public view returns (uint256) {
         uint256 uRatio = _utilizationRatio(); //The ratio of borrows to deposits
         uint256 interestMul = _interestMultiplier();
-        uint256 product = mulExp(uRatio, interestMul);
+        uint256 product = wmul(uRatio, interestMul);
         return product.add(baseRate);
     }
 
     function _depositRate() public view returns (uint256) {
         uint256 uRatio = _utilizationRatio();
         uint256 bRate = _borrowRate();
-        return mulExp(uRatio, bRate);
+        return wmul(uRatio, bRate);
     }
 
     function _convertEthToDai(uint256 _amount) internal returns (uint256) {
