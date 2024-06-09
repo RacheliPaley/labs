@@ -1,0 +1,9 @@
+Saving last configuration file to .certora_internal/24_06_09_13_38_10_352/run.conf
+Failure traceback: 
+CertoraUserInputError: You are using certora-cli-beta version 7.6.3; however, version 7.7.0 is available. You must upgrade by running: pip install certora-cli-beta --upgrade
+or
+pip3 install certora-cli-beta --upgrade
+Encountered an error running Certora Prover:
+You are using certora-cli-beta version 7.6.3; however, version 7.7.0 is available. You must upgrade by running: pip install certora-cli-beta --upgrade
+or
+pip3 install certora-cli-beta --upgrade

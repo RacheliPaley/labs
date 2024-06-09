@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13 ;
+pragma solidity ^0.8.13;
 
 contract HelloWorldV1 {
     string public text = "hello world";
@@ -6,4 +6,4 @@ contract HelloWorldV1 {
     function setText(string memory _text) public {
         text = _text;
     }
-} 
+}

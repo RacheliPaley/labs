@@ -1,5 +1,5 @@
 [profile.default]
-solc_version = '0.8.19'
+solc_version = '0.8.24'
 evm_version = 'london'
 auto_detect_solc = false
 optimizer = true
@@ -11,7 +11,7 @@ remappings = [
     "foundry-huff=lib/foundry-huff/src/",
     "@hack/=src/",
     "solmate/=lib/solmate/src/",
-    "@openzeppelin/=lib/openzeppelin-contracts/contracts/token/",
+    "@openzeppelin/=lib/openzeppelin-contracts/",
     "@openzeppelinMath/=lib/openzeppelin-contracts/contracts/utils/",
     "@openzeppelinAccess/=lib/openzeppelin-contracts/contracts/access/",
     "@chainlink/=lib/chainlink/"

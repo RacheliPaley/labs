@@ -1,0 +1,28 @@
+{
+    "CLI_version": "7.7.0",
+    "branch": "master",
+    "certora_ci_client": null,
+    "conf": {
+        "files": [
+            "ERC20.sol"
+        ],
+        "process": "emv",
+        "solc": "solc",
+        "verify": "ERC20:ERC20.spec"
+    },
+    "conf_path": null,
+    "cwd_relative": "src/certora",
+    "dirty": true,
+    "main_spec": "ERC20.spec",
+    "origin": "https://github.com/RacheliPaley/labs.git",
+    "raw_args": [
+        "/home/user/.local/bin/certoraRun",
+        "ERC20.sol",
+        "--verify",
+        "ERC20:ERC20.spec",
+        "--solc",
+        "solc"
+    ],
+    "revision": "a9af666d9b8ee984c655e96ea719ec031a4cdd67",
+    "timestamp": "1717918724.916024"
+}
