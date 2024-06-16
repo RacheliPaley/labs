@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-
-
 contract Func1 {
-
-       function _name() internal pure  returns (string memory) {
+    function _name() internal pure returns (string memory) {
         // Return the name of the contract.
         assembly {
             mstore(0x20, 0x20)
